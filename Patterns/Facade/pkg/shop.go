@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// Shop структура магазина, Name - имя магазина
+// Products - слайс типа Product, то есть все продукты которые можно купить в магазине
 type Shop struct {
 	Name     string
 	Products []Product
@@ -18,7 +20,7 @@ func (shop Shop) Sell(user User, product string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("[Магазин] Проверка, может ли пользователь купить товар! \n", user.Name)
+	fmt.Printf("[Магазин] Проверка, может ли [%s] купить товар! \n", user.Name)
 	time.Sleep(time.Millisecond * 300)
 	for _, prod := range shop.Products {
 		if prod.Name != product {
