@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 )
 
 // Pointers Тип содержащий две координаты типа float64, для графика осей x y
@@ -39,6 +38,7 @@ func (p *pointersBuilder) SetY(value float64) PointersBuilderI {
 	return p
 }
 
+// Build Возвращает структуру Pointers со значениями x и y структуры pointersBuilder
 func (p pointersBuilder) Build() Pointers {
 	return Pointers{
 		X: p.x,
@@ -46,21 +46,19 @@ func (p pointersBuilder) Build() Pointers {
 	}
 }
 
+// NewPointersBuilder создает новую структуру pointersBuilder
 func NewPointersBuilder() pointersBuilder {
 	return pointersBuilder{}
 }
 
-func CalculateDistance(p1 pointersBuilder, p2 pointersBuilder) float64 {
-	result := math.Sqrt(math.Pow(p1.x-p2.x, 2) + math.Pow(p1.y-p2.y, 2))
-	return result
-}
-
 func main() {
+	// Создаем новую переменную типа pointersBuilder
 	pointer1 := NewPointersBuilder()
-	pointer1.SetX(1).SetY(1).Build()
 	pointer2 := NewPointersBuilder()
+
+	// При помощи конструктора в билдере задаем нужные нам координаты соответственно
+	pointer1.SetX(1).SetY(1).Build()
 	pointer2.SetX(4).SetY(5).Build()
 
-	fmt.Println(CalculateDistance(pointer1, pointer2))
 	fmt.Println(pointer1, pointer2)
 }
