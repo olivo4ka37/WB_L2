@@ -10,7 +10,7 @@ type Pointers struct {
 	Y float64
 }
 
-// PointersBuilderI Интерфейс для реализации Builder паттерна для типа Pointers
+// PointersBuilderI Интерфейс для реализации 02_Builder паттерна для типа Pointers
 type PointersBuilderI interface {
 	SetX(value float64) PointersBuilderI
 	SetY(value float64) PointersBuilderI
