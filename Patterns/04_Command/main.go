@@ -32,24 +32,30 @@ package main
 */
 
 func main() {
-	//
+	// инициализация объекта получателя
 	tv := &Tv{}
 
+	// инициализация объекта запроса
 	onCommand := &OnCommand{
 		device: tv,
 	}
 
+	// инициализация объекта запроса
 	offCommand := &OffCommand{
 		device: tv,
 	}
 
+	// инициализация объекта инициатора запроса
 	onButton := &Button{
 		command: onCommand,
 	}
+	// вызов команды
 	onButton.press()
 
+	// инициализация объекта инициатора запроса
 	offButton := &Button{
 		command: offCommand,
 	}
+	// вызов команды
 	offButton.press()
 }
