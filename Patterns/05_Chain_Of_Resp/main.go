@@ -23,19 +23,23 @@ package main
 - получение не гарантировано.
 
 Примеры использования:
-- в ЕТ++ паттерн цепочка обязанностей применяется для обработки запросов на обновление графического изображения.
+- в веб приложении цепочка обязанностей может быть использована, для обработки заказа в интернет маркет-плейсе проверка наличия товара на складе,
+проверка статуса платежа, обработка доставки и тд.
 */
 
 import "fmt"
 
+// Handler интерфейс обработчиков
 type Handler interface {
 	Handle(byte)
 }
 
+// ConcreteHandlerA структура содержащая некий обработчик A
 type ConcreteHandlerA struct {
 	next Handler
 }
 
+// Handle обработчик структуры A
 func (h ConcreteHandlerA) Handle(msg byte) {
 	if msg == 'A' {
 		fmt.Println("The request was handled by ConcreteHandlerA")
@@ -44,10 +48,12 @@ func (h ConcreteHandlerA) Handle(msg byte) {
 	}
 }
 
+// ConcreteHandlerB структура содержащая некий обработчик B
 type ConcreteHandlerB struct {
 	next Handler
 }
 
+// Handle обработчик структуры B
 func (h ConcreteHandlerB) Handle(msg byte) {
 	if msg == 'B' {
 		fmt.Println("The request was handled by ConcreteHandlerB")
@@ -56,10 +62,12 @@ func (h ConcreteHandlerB) Handle(msg byte) {
 	}
 }
 
+// ConcreteHandlerC структура содержащая некий обработчик C
 type ConcreteHandlerC struct {
 	next Handler
 }
 
+// Handle обработчик структуры 	C
 func (h ConcreteHandlerC) Handle(msg byte) {
 	if msg == 'C' {
 		fmt.Println("The request was handled by ConcreteHandlerC")
@@ -69,11 +77,14 @@ func (h ConcreteHandlerC) Handle(msg byte) {
 }
 
 func main() {
+	// Инициализация интерфейса в котором реализованна цепочка обязанностей
 	handler := ConcreteHandlerA{
 		next: ConcreteHandlerB{
 			next: ConcreteHandlerC{},
 		},
 	}
 
+	handler.Handle('A')
+	handler.Handle('B')
 	handler.Handle('C')
 }
