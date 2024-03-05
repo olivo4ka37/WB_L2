@@ -1,7 +1,7 @@
 package main
 
 import (
-	"WB_L2/Patterns/01_Facade/pkg"
+	"WB_L2/pattern/01_Facade/pkg"
 	"fmt"
 )
 
