@@ -12,14 +12,14 @@ import (
 
 func main() {
 	flag := flags{
-		reverseSort:    false,
-		uniqueStrings:  false,
-		ignoringBlanks: true,
-		checkForSorted: false,
-		numberSort:     true,
+		reverseSort:         false,
+		uniqueStrings:       false,
+		ignoringRightBlanks: true,
+		checkForSorted:      false,
+		numberSort:          false,
 	}
 
-	SortFile(flag, "file.txt")
+	SortFile(flag, "file.txt", "C:/Users/eblan  elite/GolandProjects/WB_L2/develop/dev03/answer.txt")
 }
 
 // flags структура флагов
@@ -29,14 +29,14 @@ type flags struct {
 	reverseSort           bool // -r — сортировать в обратном порядке
 	uniqueStrings         bool // -u - не выводить повторяющиеся строки
 	month                 bool // -m - сортировать по названию месяца
-	ignoringBlanks        bool // -b - игнорировать хвостовые пробелы
+	ignoringRightBlanks   bool // -b - игнорировать хвостовые пробелы
 	checkForSorted        bool // -c — проверять отсортированы ли данные
 	numericSortWithSuffix bool // -h — сортировать по числовому значению с учетом суффиксов
 }
 
 // SortFile Сортирует строки в файле, следуя указанным флагам
-func SortFile(flag flags, fileName string) {
-	file, err := os.OpenFile(fileName, os.O_RDWR, 0644)
+func SortFile(flag flags, fileName, answerFileDestination string) {
+	file, err := os.OpenFile(fileName, os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println("Ошибка при открытии файла:", err)
 		return
@@ -45,7 +45,7 @@ func SortFile(flag flags, fileName string) {
 
 	var fileStrings []string
 
-	if flag.ignoringBlanks == false {
+	if flag.ignoringRightBlanks == false {
 		fileStrings, err = readFileByLines(file)
 		if err != nil {
 			fmt.Println("Ошибка при чтении файла построчно:", err)
@@ -83,7 +83,7 @@ func SortFile(flag flags, fileName string) {
 		fileStrings = removeDuplicates(fileStrings)
 	}
 
-	err = writeAllStringsToFile(file, fileStrings)
+	err = writeAllStringsToFile(answerFileDestination, fileStrings)
 	if err != nil {
 		fmt.Println("Ошибка при записи данных в файл:", err)
 		return
@@ -115,49 +115,60 @@ func readFileWithoutBlanks(file *os.File) ([]string, error) {
 
 // readFileByLines Читает все строки из файла
 func readFileByLines(file *os.File) ([]string, error) {
-	// Создаем новый сканер для чтения файла построчно
-	scanner := bufio.NewScanner(file)
+	var fileStrings []string        // Массив для хранения строк файла
+	var currentLine []byte          // Собираем текущую строку здесь
+	reader := bufio.NewReader(file) // Создаем буферизованный reader для файла
 
-	// Считываем файл построчно
-	fileStrings := make([]string, 0)
-	for scanner.Scan() {
-		fileStrings = append(fileStrings, scanner.Text())
+	for {
+		b, err := reader.ReadByte() // Считываем байт
+		if err != nil {
+			break // Если достигнут конец файла или произошла ошибка, выходим из цикла
+		}
+
+		if b == '\n' {
+			// Когда встречаем символ новой строки, добавляем собранную строку в массив
+			fileStrings = append(fileStrings, string(currentLine))
+			currentLine = nil // Сбрасываем текущую строку
+		} else {
+			currentLine = append(currentLine, b) // Добавляем байт в текущую строку
+		}
 	}
 
-	// Проверяем наличие ошибок во время сканирования
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Ошибка при сканировании файла:", err)
-		return nil, err
+	// Добавляем последнюю строку, если она не пустая
+	if len(currentLine) > 0 {
+		fileStrings = append(fileStrings, string(currentLine))
 	}
 
 	return fileStrings, nil
 }
 
 // writeAllStringsToFile Записывает все отсортированные строки в файл
-func writeAllStringsToFile(file *os.File, fileStrings []string) error {
-	// Очищаем содержимое файла
-	err := file.Truncate(0)
+func writeAllStringsToFile(fileName string, fileStrings []string) error {
+	//// Очищаем содержимое файла
+	//err := file.Truncate(0)
+	//if err != nil {
+	//	fmt.Println("Ошибка при очистке файла:", err)
+	//	return err
+	//}
+
+	// Открываем файл для записи. Если файл существует, он будет перезаписан.
+	file, err := os.Create(fileName)
 	if err != nil {
-		fmt.Println("Ошибка при очистке файла:", err)
-		return err
+		return fmt.Errorf("ошибка при создании файла: %w", err)
 	}
+	defer file.Close()
 
-	// Создаем новый писатель для записи в файл
-	writer := bufio.NewWriter(file)
-
-	// Записываем каждую строку в файл
 	for _, line := range fileStrings {
-		_, err := writer.WriteString(line + "\n")
+		// Преобразуем строку в слайс байт и записываем её в файл.
+		fmt.Println([]byte(line))
+		_, err := file.Write([]byte(line)) // Записываем каждый байт отдельно
 		if err != nil {
-			fmt.Println("Ошибка при записи в файл:", err)
-			return err
+			return fmt.Errorf("ошибка при записи в файл: %w", err)
 		}
-	}
-
-	// Сбрасываем буфер и убеждаемся, что все данные записаны в файл
-	if err = writer.Flush(); err != nil {
-		fmt.Println("Ошибка при сбросе буфера:", err)
-		return err
+		// После каждой строки добавляем символ новой строки в файл.
+		if _, err := file.Write([]byte("\n")); err != nil {
+			return fmt.Errorf("ошибка при добавлении символа новой строки: %w", err)
+		}
 	}
 
 	return nil
