@@ -12,14 +12,17 @@ import (
 
 func main() {
 	flag := flags{
-		reverseSort:         false,
-		uniqueStrings:       false,
-		ignoringRightBlanks: true,
-		checkForSorted:      false,
-		numberSort:          false,
+		column:                0,
+		numberSort:            false,
+		reverseSort:           false,
+		uniqueStrings:         false,
+		month:                 false,
+		ignoringRightBlanks:   false,
+		checkForSorted:        false,
+		numericSortWithSuffix: false,
 	}
 
-	SortFile(flag, "file.txt", "C:/Users/eblan  elite/GolandProjects/WB_L2/develop/dev03/answer.txt")
+	SortFile(flag, "file.txt", "answer.txt")
 }
 
 // flags структура флагов
@@ -59,8 +62,8 @@ func SortFile(flag flags, fileName, answerFileDestination string) {
 		}
 	}
 
-	// Проверяет отсортирован ли файл если этот флаг включен
-	if flag.checkForSorted == true {
+	// Проверяет отсортирован ли файл если этот флаг включен, а другие исключающие его флаги выключены
+	if flag.checkForSorted == true && flag.numericSortWithSuffix != true && flag.month != true {
 		if checkForSorted(fileStrings, flag) == true {
 			fmt.Println("Файл уже отсортирован")
 			return
@@ -68,7 +71,13 @@ func SortFile(flag flags, fileName, answerFileDestination string) {
 	}
 
 	// Выбирает тип сортировки взависимости от установленных флагов
-	if flag.reverseSort == true && flag.numberSort == true {
+	if flag.column > 0 {
+		fileStrings = sortByColumn(fileStrings, flag.column, flag)
+	} else if flag.month == true {
+		fileStrings = sortByMonth(fileStrings, flag)
+	} else if flag.numericSortWithSuffix == true {
+		fileStrings = numericSortWithPrefix(fileStrings, flag)
+	} else if flag.reverseSort == true && flag.numberSort == true {
 		sortByNumericDecrease(fileStrings)
 	} else if flag.reverseSort == false && flag.numberSort == true {
 		sortByNumericIncrease(fileStrings)
@@ -152,7 +161,7 @@ func writeAllStringsToFile(fileName string, fileStrings []string) error {
 	//}
 
 	// Открываем файл для записи. Если файл существует, он будет перезаписан.
-	file, err := os.Create(fileName)
+	file, err := os.OpenFile(fileName, os.O_WRONLY, 0666)
 	if err != nil {
 		return fmt.Errorf("ошибка при создании файла: %w", err)
 	}
@@ -160,7 +169,6 @@ func writeAllStringsToFile(fileName string, fileStrings []string) error {
 
 	for _, line := range fileStrings {
 		// Преобразуем строку в слайс байт и записываем её в файл.
-		fmt.Println([]byte(line))
 		_, err := file.Write([]byte(line)) // Записываем каждый байт отдельно
 		if err != nil {
 			return fmt.Errorf("ошибка при записи в файл: %w", err)
@@ -216,6 +224,180 @@ func sortByNumericWithPrefix(fileStrings []string) {
 	})
 }
 
+// sortByColumn Сортирует массив строк по заданной колонке n
+func sortByColumn(fileStrings []string, n int, flag flags) []string {
+	unsortedFileStrings := make([]string, len(fileStrings))
+	sortedFileStrings := make([]string, len(fileStrings))
+	mapStringssOfStrings := make(map[string]string)
+
+	for i := 0; i < len(fileStrings); i++ {
+		xn := 1
+		for j := 1; j < len(fileStrings[i]); j++ {
+			if xn == n {
+				for j < len(fileStrings[i]) {
+					if isSpace(fileStrings[i][j]) {
+						break
+					}
+					unsortedFileStrings[i] = unsortedFileStrings[i] + string(fileStrings[i][j])
+					j++
+				}
+
+				mapStringssOfStrings[unsortedFileStrings[i]] = fileStrings[i]
+
+				break
+			} else if xn > n {
+				break
+			}
+
+			if isSpace(fileStrings[i][j]) {
+				xn++
+			}
+		}
+	}
+
+	if flag.reverseSort == false {
+		increaseStringsSort(unsortedFileStrings)
+	} else {
+		decreaseStringsSort(unsortedFileStrings)
+	}
+	for i, _ := range sortedFileStrings {
+		sortedFileStrings[i] = mapStringssOfStrings[unsortedFileStrings[i]]
+	}
+
+	return sortedFileStrings
+}
+
+// sortByMonth Сортирует строки по месяцам указанным в них
+func sortByMonth(fileStrings []string, flag flags) []string {
+	indexiesOfStrings := make([][]int, len(fileStrings))
+	sortedStrings := make([]string, len(fileStrings))
+
+	for i, line := range fileStrings {
+		if len(line) >= 3 {
+			switch strings.ToLower(line[:3]) {
+			case "jan":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 1
+				indexiesOfStrings[i] = xNumb
+			case "feb":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 2
+				indexiesOfStrings[i] = xNumb
+			case "mar":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 3
+				indexiesOfStrings[i] = xNumb
+			case "apr":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 4
+				indexiesOfStrings[i] = xNumb
+			case "may":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 5
+				indexiesOfStrings[i] = xNumb
+			case "jun":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 6
+				indexiesOfStrings[i] = xNumb
+			case "jul":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 7
+				indexiesOfStrings[i] = xNumb
+			case "aug":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 8
+				indexiesOfStrings[i] = xNumb
+			case "sep":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 9
+				indexiesOfStrings[i] = xNumb
+			case "oct":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 10
+				indexiesOfStrings[i] = xNumb
+			case "nov":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 11
+				indexiesOfStrings[i] = xNumb
+			case "dec":
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 12
+				indexiesOfStrings[i] = xNumb
+			default:
+				xNumb := make([]int, 2)
+				xNumb[0] = i
+				xNumb[1] = 13
+				indexiesOfStrings[i] = xNumb
+			}
+		} else {
+			xNumb := make([]int, 2)
+			xNumb[0] = i
+			xNumb[1] = 13
+			indexiesOfStrings[i] = xNumb
+		}
+
+	}
+
+	if flag.reverseSort == false {
+		sort.Slice(indexiesOfStrings, func(i, j int) bool {
+			return indexiesOfStrings[i][1] < indexiesOfStrings[j][1]
+		})
+	} else {
+		sort.Slice(indexiesOfStrings, func(i, j int) bool {
+			return indexiesOfStrings[i][1] > indexiesOfStrings[j][1]
+		})
+	}
+
+	for i := 0; i < len(fileStrings); i++ {
+		sortedStrings[i] = fileStrings[indexiesOfStrings[i][0]]
+	}
+
+	return sortedStrings
+}
+
+// numericSortWithPrefix Производит сортировку строк с числовым значениям учитывая префиксы измерения памяти
+func numericSortWithPrefix(fileStrings []string, flag flags) []string {
+	indexiesOfStrings := make([][]int, len(fileStrings))
+	unsortedNums := make([]int, len(fileStrings))
+	sortedStrings := make([]string, len(fileStrings))
+
+	for i := 0; i < len(fileStrings); i++ {
+		unsortedNums[i], _ = toBytes(fileStrings[i])
+		xNumb := make([]int, 2)
+		xNumb[0] = unsortedNums[i]
+		xNumb[1] = i
+		indexiesOfStrings[i] = xNumb
+	}
+
+	if flag.reverseSort == false {
+		sort.Slice(indexiesOfStrings, func(i, j int) bool {
+			return indexiesOfStrings[i][0] < indexiesOfStrings[j][0]
+		})
+	} else {
+		sort.Slice(indexiesOfStrings, func(i, j int) bool {
+			return indexiesOfStrings[i][0] > indexiesOfStrings[j][0]
+		})
+	}
+
+	for i := 0; i < len(fileStrings); i++ {
+		sortedStrings[i] = fileStrings[indexiesOfStrings[i][1]]
+	}
+
+	return sortedStrings
+}
+
 // toBytes Функция для преобразования строки с единицей измерения в число байтов
 func toBytes(s string) (int, error) {
 	re := regexp.MustCompile(`(?i)^(\d+)([KMGTP]?)B?$`)
@@ -256,14 +438,16 @@ func removeAllSpaces(str string) string {
 	return strings.TrimRight(str, " ")
 }
 
-// checkForSorted проверяет отсортированны ли строки
+// checkForSorted проверяет отсортированы ли строки
 func checkForSorted(strArray []string, Flag flags) bool {
 
+	// Проверяем флаг на обратную сортировку
 	if Flag.reverseSort == false {
 		for j := 0; j < len(strArray); j++ {
 			if j == 0 {
 				continue
 			} else {
+				// Если строки расположены не в отсортированном значении возвращаем false
 				if strArray[j-1] > strArray[j] {
 					return false
 				}
@@ -274,6 +458,7 @@ func checkForSorted(strArray []string, Flag flags) bool {
 			if j == 0 {
 				continue
 			} else {
+				// Если строки расположены не в отсортированном значении возвращаем false
 				if strArray[j-1] < strArray[j] {
 					return false
 				}
@@ -299,4 +484,12 @@ func removeDuplicates(strings []string) []string {
 	}
 
 	return result
+}
+
+// isSpace Проверяет байт на пробел или флаг страницы
+func isSpace(r byte) bool {
+	if r == ' ' || r == '\t' || r == '\n' || r == '\v' || r == '\f' || r == '\r' {
+		return true
+	}
+	return false
 }
