@@ -153,12 +153,6 @@ func readFileByLines(file *os.File) ([]string, error) {
 
 // writeAllStringsToFile Записывает все отсортированные строки в файл
 func writeAllStringsToFile(fileName string, fileStrings []string) error {
-	//// Очищаем содержимое файла
-	//err := file.Truncate(0)
-	//if err != nil {
-	//	fmt.Println("Ошибка при очистке файла:", err)
-	//	return err
-	//}
 
 	// Открываем файл для записи. Если файл существует, он будет перезаписан.
 	file, err := os.OpenFile(fileName, os.O_WRONLY, 0666)
