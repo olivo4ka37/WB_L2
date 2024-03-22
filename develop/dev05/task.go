@@ -1,5 +1,12 @@
 package main
 
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"regexp"
+)
+
 /*
 Утилита grep
 
@@ -20,5 +27,204 @@ package main
 */
 
 func main() {
+	flag := flags{
+		after:      0,
+		before:     0,
+		context:    1,
+		count:      false,
+		ignoreCase: false,
+		invert:     false,
+		fixed:      false,
+		lineNum:    false,
+	}
 
+	pattern := "123"
+	fileName := "file.txt"
+	answerFileName := "answer.txt"
+
+	grep(flag, pattern, fileName, answerFileName)
+}
+
+type flags struct {
+	after      int  //-A - "after" печатать +N строк после совпадения
+	before     int  //-B - "before" печатать +N строк до совпадения
+	context    int  //-C - "context" (A+B) печатать ±N строк вокруг совпадения
+	count      bool //-c - "count" (количество строк)
+	ignoreCase bool //-i - "ignore-case" (игнорировать регистр)
+	invert     bool //-v - "invert" (вместо совпадения, исключать)
+	fixed      bool //-F - "fixed", точное совпадение со строкой, не паттерн
+	lineNum    bool //-n - "line num", напечатать номер строки
+}
+
+func grep(flag flags, pattern, fileName, answerFileName string) error {
+	file, err := os.OpenFile(fileName, os.O_RDWR, 0666)
+	if err != nil {
+		fmt.Println("Ошибка при открытии файла:", err)
+		return err
+	}
+	defer file.Close()
+
+	var fileStrings []string
+
+	fileStrings, err = readFileByLines(file)
+	if err != nil {
+		fmt.Println("Ошибка при чтении файла построчно:", err)
+		return err
+	}
+
+	if flag.count == true {
+		return countOfMatchedStrings(fileStrings, pattern)
+	} else if flag.after > 0 || flag.before > 0 || flag.context > 0 {
+		fileStrings, err = stringsBeforeAfterAndBoth(fileStrings, pattern, flag)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = writeAllStringsToFile(answerFileName, fileStrings)
+	if err != nil {
+		fmt.Println("Ошибка при записи данных в файл:", err)
+		return err
+	}
+
+	fmt.Println("Данные успешно записаны в файл.")
+	return nil
+}
+
+// readFileByLines Читает все строки из файла
+func readFileByLines(file *os.File) ([]string, error) {
+	var fileStrings []string        // Массив для хранения строк файла
+	var currentLine []byte          // Собираем текущую строку здесь
+	reader := bufio.NewReader(file) // Создаем буферизованный reader для файла
+
+	for {
+		b, err := reader.ReadByte() // Считываем байт
+		if err != nil {
+			break // Если достигнут конец файла или произошла ошибка, выходим из цикла
+		}
+
+		if b == '\n' {
+			// Когда встречаем символ новой строки, добавляем собранную строку в массив
+			fileStrings = append(fileStrings, string(currentLine))
+			currentLine = nil // Сбрасываем текущую строку
+		} else {
+			currentLine = append(currentLine, b) // Добавляем байт в текущую строку
+		}
+	}
+
+	// Добавляем последнюю строку, если она не пустая
+	if len(currentLine) > 0 {
+		fileStrings = append(fileStrings, string(currentLine))
+	}
+
+	return fileStrings, nil
+}
+
+// writeAllStringsToFile Записывает все отсортированные строки в файл
+func writeAllStringsToFile(fileName string, fileStrings []string) error {
+	// Открываем файл для записи. Если файл существует, он будет перезаписан.
+	file, err := os.Create(fileName)
+	if err != nil {
+		return fmt.Errorf("ошибка при создании файла: %w", err)
+	}
+	defer file.Close()
+
+	for _, line := range fileStrings {
+		// Преобразуем строку в слайс байт и записываем её в файл.
+		_, err := file.Write([]byte(line)) // Записываем каждый байт отдельно
+		if err != nil {
+			return fmt.Errorf("ошибка при заWписи в файл: %w", err)
+		}
+		// После каждой строки добавляем символ новой строки в файл.
+		if _, err := file.Write([]byte("\n")); err != nil {
+			return fmt.Errorf("ошибка при добавлении символа новой строки: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func countOfMatchedStrings(fileStrings []string, pattern string) error {
+	result := 0
+	repattern, err := regexp.Compile(pattern)
+	if err != nil {
+		return fmt.Errorf("Некорректный паттерн: %w", err)
+	}
+
+	for _, xstr := range fileStrings {
+		if repattern.MatchString(xstr) {
+			result++
+		}
+	}
+
+	fmt.Println("Количество стро содержащих совпадение равно:", result)
+
+	return nil
+}
+
+func stringsBeforeAfterAndBoth(fileStrings []string, pattern string, flag flags) ([]string, error) {
+	result := make([]string, 0)
+
+	if flag.context > 0 {
+		testResult, err := flagContext(fileStrings, pattern, flag)
+		if err != nil {
+			return nil, fmt.Errorf("Ошибка в работе с флагом -C (context)", err)
+		}
+		result = testResult
+	} else if flag.before > 0 {
+
+	} else {
+
+	}
+
+	return result, nil
+}
+
+func flagContext(fileStrings []string, pattern string, flag flags) ([]string, error) {
+	result := make([]string, 0)
+	alreadyAdded := make([]bool, len(fileStrings))
+	repattern, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("Некорректный паттерн: %w", err)
+	}
+
+	for i, xstr := range fileStrings {
+		if repattern.MatchString(xstr) {
+			xn1 := flag.context
+			for i < xn1 {
+				xn1--
+			}
+			if xn1 > 0 {
+				for xn1 > 0 {
+					if alreadyAdded[i-xn1] == false {
+						result = append(result, fileStrings[i-xn1])
+					}
+					alreadyAdded[i-xn1] = true
+					xn1--
+				}
+			}
+
+			if alreadyAdded[i] == false {
+				result = append(result, xstr)
+			}
+			alreadyAdded[i] = true
+
+			xn2 := flag.context
+			for xn2+i > len(fileStrings)-1 {
+				xn2--
+			}
+			if xn2 > 0 {
+				for xn2 > 0 {
+					if alreadyAdded[i+xn2] == false {
+						result = append(result, fileStrings[i+xn2])
+					}
+					alreadyAdded[i+xn2] = true
+					xn2--
+				}
+			}
+
+		}
+	}
+
+	return result, nil
 }
