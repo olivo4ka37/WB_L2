@@ -62,7 +62,7 @@ type flags struct {
 }
 
 // SortFile Сортирует строки в файле, следуя указанным флагам
-func SortFile(flag flags, fileName, answerFileDestination string) {
+func SortFile(flag flags, fileName, answerFileName string) {
 	file, err := os.OpenFile(fileName, os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println("Ошибка при открытии файла:", err)
@@ -116,7 +116,7 @@ func SortFile(flag flags, fileName, answerFileDestination string) {
 		fileStrings = removeDuplicates(fileStrings)
 	}
 
-	err = writeAllStringsToFile(answerFileDestination, fileStrings)
+	err = writeAllStringsToFile(answerFileName, fileStrings)
 	if err != nil {
 		fmt.Println("Ошибка при записи данных в файл:", err)
 		return
