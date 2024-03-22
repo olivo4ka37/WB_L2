@@ -179,7 +179,7 @@ func readFileByLines(file *os.File) ([]string, error) {
 func writeAllStringsToFile(fileName string, fileStrings []string) error {
 
 	// Открываем файл для записи. Если файл существует, он будет перезаписан.
-	file, err := os.OpenFile(fileName, os.O_WRONLY, 0666)
+	file, err := os.Create(fileName)
 	if err != nil {
 		return fmt.Errorf("ошибка при создании файла: %w", err)
 	}
