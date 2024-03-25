@@ -30,10 +30,10 @@ func main() {
 	flag := flags{
 		after:      0,
 		before:     0,
-		context:    1,
+		context:    0,
 		count:      false,
 		ignoreCase: true,
-		invert:     true,
+		invert:     false,
 		fixed:      false,
 		lineNum:    false,
 	}
@@ -170,9 +170,14 @@ func countOfMatchedStrings(fileStrings []string, pattern string, flag flags) err
 func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error) {
 	result := make([]string, 0)
 	alreadyAdded := make([]bool, len(fileStrings))
+
 	if flag.ignoreCase == true {
 		pattern = "(?i)" + pattern
 	}
+	if flag.fixed == true {
+		pattern = "^" + pattern + "$"
+	}
+
 	repattern, err := regexp.Compile(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("Некорректный паттерн: %w", err)
@@ -242,6 +247,10 @@ func justGrep(fileStrings []string, pattern string, flag flags) ([]string, error
 
 	if flag.ignoreCase == true {
 		pattern = "(?i)" + pattern
+	}
+
+	if flag.fixed == true {
+		pattern = "^" + pattern + "$"
 	}
 
 	repattern, err := regexp.Compile(pattern)
