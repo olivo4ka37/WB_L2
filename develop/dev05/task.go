@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 )
 
 /*
@@ -30,12 +31,12 @@ func main() {
 	flag := flags{
 		after:      0,
 		before:     0,
-		context:    0,
+		context:    1,
 		count:      false,
 		ignoreCase: true,
 		invert:     false,
-		fixed:      false,
-		lineNum:    false,
+		fixed:      true,
+		lineNum:    true,
 	}
 
 	pattern := "abc"
@@ -202,7 +203,11 @@ func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error)
 				if xn1 > 0 {
 					for xn1 > 0 {
 						if alreadyAdded[i-xn1] == false {
-							result = append(result, fileStrings[i-xn1])
+							if flag.lineNum == true {
+								result = append(result, strconv.Itoa(i-xn1+1)+": "+fileStrings[i-xn1])
+							} else {
+								result = append(result, fileStrings[i-xn1])
+							}
 						}
 						alreadyAdded[i-xn1] = true
 						xn1--
@@ -211,7 +216,11 @@ func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error)
 			}
 
 			if alreadyAdded[i] == false {
-				result = append(result, xstr)
+				if flag.lineNum == true {
+					result = append(result, strconv.Itoa(i+1)+": "+xstr)
+				} else {
+					result = append(result, xstr)
+				}
 			}
 			alreadyAdded[i] = true
 
@@ -228,7 +237,11 @@ func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error)
 				if xn2 > 0 {
 					for xn2 > 0 {
 						if alreadyAdded[i+xn2] == false {
-							result = append(result, fileStrings[i+xn2])
+							if flag.lineNum == true {
+								result = append(result, strconv.Itoa(i+xn2+1)+": "+fileStrings[i+xn2])
+							} else {
+								result = append(result, fileStrings[i+xn2])
+							}
 						}
 						alreadyAdded[i+xn2] = true
 						xn2--
@@ -258,13 +271,17 @@ func justGrep(fileStrings []string, pattern string, flag flags) ([]string, error
 		return nil, fmt.Errorf("Некорректный паттерн: %w", err)
 	}
 
-	for _, xstr := range fileStrings {
+	for i, xstr := range fileStrings {
 		matchResult := repattern.MatchString(xstr)
 		if flag.invert == true {
 			matchResult = !matchResult
 		}
 		if matchResult {
-			result = append(result, xstr)
+			if flag.lineNum == true {
+				result = append(result, strconv.Itoa(i+1)+": "+xstr)
+			} else {
+				result = append(result, xstr)
+			}
 		}
 	}
 
