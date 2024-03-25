@@ -30,10 +30,10 @@ func main() {
 	flag := flags{
 		after:      0,
 		before:     0,
-		context:    2,
+		context:    1,
 		count:      false,
-		ignoreCase: false,
-		invert:     false,
+		ignoreCase: true,
+		invert:     true,
 		fixed:      false,
 		lineNum:    false,
 	}
@@ -179,7 +179,11 @@ func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error)
 	}
 
 	for i, xstr := range fileStrings {
-		if repattern.MatchString(xstr) {
+		matchResult := repattern.MatchString(xstr)
+		if flag.invert == true {
+			matchResult = !matchResult
+		}
+		if matchResult {
 			if flag.context > 0 || flag.before > 0 {
 				xn1 := 0
 				if flag.context > 0 {
@@ -246,7 +250,11 @@ func justGrep(fileStrings []string, pattern string, flag flags) ([]string, error
 	}
 
 	for _, xstr := range fileStrings {
-		if repattern.MatchString(xstr) {
+		matchResult := repattern.MatchString(xstr)
+		if flag.invert == true {
+			matchResult = !matchResult
+		}
+		if matchResult {
 			result = append(result, xstr)
 		}
 	}
