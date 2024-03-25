@@ -32,11 +32,11 @@ func main() {
 		after:      0,
 		before:     0,
 		context:    1,
-		count:      false,
-		ignoreCase: true,
+		count:      true,
+		ignoreCase: false,
 		invert:     false,
-		fixed:      true,
-		lineNum:    true,
+		fixed:      false,
+		lineNum:    false,
 	}
 
 	pattern := "abc"
@@ -78,7 +78,10 @@ func grep(flag flags, pattern, fileName, answerFileName string) error {
 	}
 
 	if flag.count == true {
-		return countOfMatchedStrings(fileStrings, pattern, flag)
+		fileStrings, err = countOfMatchedStrings(fileStrings, pattern, flag)
+		if err != nil {
+			return err
+		}
 	} else if flag.after > 0 || flag.before > 0 || flag.context > 0 {
 		fileStrings, err = flagABC(fileStrings, pattern, flag)
 		if err != nil {
@@ -151,27 +154,34 @@ func writeAllStringsToFile(fileName string, fileStrings []string) error {
 	return nil
 }
 
-// countOfMatchedStrings Реализация флага -c в утилите grep, выводит количество содержащих совпадение строк.
-// Возвращает ошибку.
-func countOfMatchedStrings(fileStrings []string, pattern string, flag flags) error {
+// countOfMatchedStrings Реализация флага -c в утилите grep.
+func countOfMatchedStrings(fileStrings []string, pattern string, flag flags) ([]string, error) {
+	resultArray := make([]string, 1)
 	result := 0
 	if flag.ignoreCase == true {
 		pattern = "(?i)" + pattern
 	}
+	if flag.fixed == true {
+		pattern = "^" + pattern + "$"
+	}
 	repattern, err := regexp.Compile(pattern)
 	if err != nil {
-		return fmt.Errorf("Некорректный паттерн: %w", err)
+		return nil, fmt.Errorf("Некорректный паттерн: %w", err)
 	}
 
 	for _, xstr := range fileStrings {
-		if repattern.MatchString(xstr) {
+		matchResult := repattern.MatchString(xstr)
+		if flag.invert == true {
+			matchResult = !matchResult
+		}
+		if matchResult {
 			result++
 		}
 	}
 
-	fmt.Println("Количество строк содержащих совпадение равно:", result)
+	resultArray[0] = strconv.Itoa(result)
 
-	return nil
+	return resultArray, nil
 }
 
 // flagABC Реализация флагов, -A -B -C для утилиты grep, с поддержкой остальных флагов, не перечащих логике.
