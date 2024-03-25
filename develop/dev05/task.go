@@ -30,7 +30,7 @@ func main() {
 	flag := flags{
 		after:      0,
 		before:     0,
-		context:    0,
+		context:    2,
 		count:      false,
 		ignoreCase: false,
 		invert:     false,
@@ -38,7 +38,7 @@ func main() {
 		lineNum:    false,
 	}
 
-	pattern := "123"
+	pattern := "abc"
 	fileName := "file.txt"
 	answerFileName := "answer.txt"
 
@@ -73,12 +73,14 @@ func grep(flag flags, pattern, fileName, answerFileName string) error {
 	}
 
 	if flag.count == true {
-		return countOfMatchedStrings(fileStrings, pattern)
+		return countOfMatchedStrings(fileStrings, pattern, flag)
 	} else if flag.after > 0 || flag.before > 0 || flag.context > 0 {
 		fileStrings, err = flagABC(fileStrings, pattern, flag)
 		if err != nil {
 			return err
 		}
+	} else {
+		fileStrings, err = justGrep(fileStrings, pattern, flag)
 	}
 
 	err = writeAllStringsToFile(answerFileName, fileStrings)
@@ -144,8 +146,11 @@ func writeAllStringsToFile(fileName string, fileStrings []string) error {
 	return nil
 }
 
-func countOfMatchedStrings(fileStrings []string, pattern string) error {
+func countOfMatchedStrings(fileStrings []string, pattern string, flag flags) error {
 	result := 0
+	if flag.ignoreCase == true {
+		pattern = "(?i)" + pattern
+	}
 	repattern, err := regexp.Compile(pattern)
 	if err != nil {
 		return fmt.Errorf("Некорректный паттерн: %w", err)
@@ -165,6 +170,9 @@ func countOfMatchedStrings(fileStrings []string, pattern string) error {
 func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error) {
 	result := make([]string, 0)
 	alreadyAdded := make([]bool, len(fileStrings))
+	if flag.ignoreCase == true {
+		pattern = "(?i)" + pattern
+	}
 	repattern, err := regexp.Compile(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("Некорректный паттерн: %w", err)
@@ -219,6 +227,27 @@ func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error)
 				}
 			}
 
+		}
+	}
+
+	return result, nil
+}
+
+func justGrep(fileStrings []string, pattern string, flag flags) ([]string, error) {
+	result := make([]string, 0)
+
+	if flag.ignoreCase == true {
+		pattern = "(?i)" + pattern
+	}
+
+	repattern, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("Некорректный паттерн: %w", err)
+	}
+
+	for _, xstr := range fileStrings {
+		if repattern.MatchString(xstr) {
+			result = append(result, xstr)
 		}
 	}
 
