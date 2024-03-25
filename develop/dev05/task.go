@@ -30,7 +30,7 @@ func main() {
 	flag := flags{
 		after:      0,
 		before:     0,
-		context:    1,
+		context:    0,
 		count:      false,
 		ignoreCase: false,
 		invert:     false,
@@ -75,7 +75,7 @@ func grep(flag flags, pattern, fileName, answerFileName string) error {
 	if flag.count == true {
 		return countOfMatchedStrings(fileStrings, pattern)
 	} else if flag.after > 0 || flag.before > 0 || flag.context > 0 {
-		fileStrings, err = stringsBeforeAfterAndBoth(fileStrings, pattern, flag)
+		fileStrings, err = flagABC(fileStrings, pattern, flag)
 		if err != nil {
 			return err
 		}
@@ -157,30 +157,12 @@ func countOfMatchedStrings(fileStrings []string, pattern string) error {
 		}
 	}
 
-	fmt.Println("Количество стро содержащих совпадение равно:", result)
+	fmt.Println("Количество строк содержащих совпадение равно:", result)
 
 	return nil
 }
 
-func stringsBeforeAfterAndBoth(fileStrings []string, pattern string, flag flags) ([]string, error) {
-	result := make([]string, 0)
-
-	if flag.context > 0 {
-		testResult, err := flagContext(fileStrings, pattern, flag)
-		if err != nil {
-			return nil, fmt.Errorf("Ошибка в работе с флагом -C (context)", err)
-		}
-		result = testResult
-	} else if flag.before > 0 {
-
-	} else {
-
-	}
-
-	return result, nil
-}
-
-func flagContext(fileStrings []string, pattern string, flag flags) ([]string, error) {
+func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error) {
 	result := make([]string, 0)
 	alreadyAdded := make([]bool, len(fileStrings))
 	repattern, err := regexp.Compile(pattern)
@@ -190,17 +172,24 @@ func flagContext(fileStrings []string, pattern string, flag flags) ([]string, er
 
 	for i, xstr := range fileStrings {
 		if repattern.MatchString(xstr) {
-			xn1 := flag.context
-			for i < xn1 {
-				xn1--
-			}
-			if xn1 > 0 {
-				for xn1 > 0 {
-					if alreadyAdded[i-xn1] == false {
-						result = append(result, fileStrings[i-xn1])
-					}
-					alreadyAdded[i-xn1] = true
+			if flag.context > 0 || flag.before > 0 {
+				xn1 := 0
+				if flag.context > 0 {
+					xn1 = flag.context
+				} else {
+					xn1 = flag.before
+				}
+				for i < xn1 {
 					xn1--
+				}
+				if xn1 > 0 {
+					for xn1 > 0 {
+						if alreadyAdded[i-xn1] == false {
+							result = append(result, fileStrings[i-xn1])
+						}
+						alreadyAdded[i-xn1] = true
+						xn1--
+					}
 				}
 			}
 
@@ -209,17 +198,24 @@ func flagContext(fileStrings []string, pattern string, flag flags) ([]string, er
 			}
 			alreadyAdded[i] = true
 
-			xn2 := flag.context
-			for xn2+i > len(fileStrings)-1 {
-				xn2--
-			}
-			if xn2 > 0 {
-				for xn2 > 0 {
-					if alreadyAdded[i+xn2] == false {
-						result = append(result, fileStrings[i+xn2])
-					}
-					alreadyAdded[i+xn2] = true
+			if flag.context > 0 || flag.after > 0 {
+				xn2 := 0
+				if flag.context > 0 {
+					xn2 = flag.context
+				} else {
+					xn2 = flag.after
+				}
+				for xn2+i > len(fileStrings)-1 {
 					xn2--
+				}
+				if xn2 > 0 {
+					for xn2 > 0 {
+						if alreadyAdded[i+xn2] == false {
+							result = append(result, fileStrings[i+xn2])
+						}
+						alreadyAdded[i+xn2] = true
+						xn2--
+					}
 				}
 			}
 
