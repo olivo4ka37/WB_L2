@@ -46,6 +46,7 @@ func main() {
 	grep(flag, pattern, fileName, answerFileName)
 }
 
+// flags Структура флагов для утилиты grep
 type flags struct {
 	after      int  //-A - "after" печатать +N строк после совпадения
 	before     int  //-B - "before" печатать +N строк до совпадения
@@ -57,6 +58,9 @@ type flags struct {
 	lineNum    bool //-n - "line num", напечатать номер строки
 }
 
+// grep это Реализация утилиты grep с поддержкой всех флагов и логикой их работы.
+// Данные берутся из файла с названием или адресом fileNmae, и записываются в файл с названием
+// или адресом answerFileName.
 func grep(flag flags, pattern, fileName, answerFileName string) error {
 	file, err := os.OpenFile(fileName, os.O_RDWR, 0666)
 	if err != nil {
@@ -147,6 +151,8 @@ func writeAllStringsToFile(fileName string, fileStrings []string) error {
 	return nil
 }
 
+// countOfMatchedStrings Реализация флага -c в утилите grep, выводит количество содержащих совпадение строк.
+// Возвращает ошибку.
 func countOfMatchedStrings(fileStrings []string, pattern string, flag flags) error {
 	result := 0
 	if flag.ignoreCase == true {
@@ -168,6 +174,7 @@ func countOfMatchedStrings(fileStrings []string, pattern string, flag flags) err
 	return nil
 }
 
+// flagABC Реализация флагов, -A -B -C для утилиты grep, с поддержкой остальных флагов, не перечащих логике.
 func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error) {
 	result := make([]string, 0)
 	alreadyAdded := make([]bool, len(fileStrings))
@@ -255,6 +262,7 @@ func flagABC(fileStrings []string, pattern string, flag flags) ([]string, error)
 	return result, nil
 }
 
+// justGrep Реализация обычной работы grep, без флагов -c, -A -B -C. С поддержкой всех остальных флагов.
 func justGrep(fileStrings []string, pattern string, flag flags) ([]string, error) {
 	result := make([]string, 0)
 
