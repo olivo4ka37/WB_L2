@@ -56,3 +56,4 @@ go.work
 *.xml
 *.iml
 .idea/.gitignore
+.idea
