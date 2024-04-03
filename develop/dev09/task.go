@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+/*
+=== Утилита wget ===
+
+Реализовать утилиту wget с возможностью скачивать сайты целиком.
+*/
+
 // normalizeLink преобразовывает ссылку, добавляя к ней схему и хост, если они отсутствуют
 func normalizeLink(link, scheme, host string) string {
 	if !strings.HasPrefix(link, "http://") && !strings.HasPrefix(link, "https://") {
